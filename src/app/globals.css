@@ -10,6 +10,24 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* --- DIN NYA FÄRGPALETT --- */
+  --color-beige: #faf8f2;   /*#FCF7E5;*/
+  --color-surface: #ffffff;    /* vit:  #ffffff; sand - #fcf4de; #FEFBE8;*/
+  --color-card-border: #f5f3dc; /*#E6E4C8;*/
+  --color-moss-green: #839958;
+  --color-dark-green: #0A3323;
+  --color-rosy-brown: #ed7b68;
+  --color-midnight-green: #105666; 
+  --color-status-unknown: #6B7280;
+  --color-status-reserved: #60A5FA; /* reserverad - lighter blue */
+  --color-status-blocked: #F59E0B;  /* blockerad - amber */
+  /* --- SEMANTISKA ALIAS --- */
+  /* Genom att döpa dessa med --color- i början bygger Tailwind klasser av dem automatiskt */
+  --color-status-available: var(--color-moss-green);
+  --color-status-occupied: var(--color-midnight-green);
+  --color-status-outoforder: var(--color-rosy-brown);
+  --color-text-primary: var(--color-dark-green);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -20,7 +38,17 @@
 }
 
 body {
-  background: var(--background);
+  background: var(--color-beige);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.dashboard-card {
+  background: var(--color-surface);
+  border-color: var(--color-card-border);
+  box-shadow: 0 16px 30px rgba(131, 153, 88, 0.12);
+}
+
+.site-footer a { text-decoration: none; color: inherit; }
+.site-footer svg { opacity: 0.95; transition: transform .12s ease, color .12s ease; }
+.site-footer a:hover svg { transform: translateY(-2px); color: #0A66C2; }
