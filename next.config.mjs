@@ -1,6 +1,14 @@
-/** @type {import('next').NextConfig} */
+﻿/** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/se/statistik-lastbilsladdare',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
