@@ -34,19 +34,20 @@ export default function StatusChart({ data, monthName }) {
   return (
     <div className="w-full h-full flex flex-col">
       {/* Vår nya dynamiska titel! */}
-      <h3 className="text-xl font-semibold text-gray-800 text-center mt-2 mb-4">
+      <h3 className="text-xl font-semibold text-gray-800 text-center mt-0 mb-1">
         Tillgänglighet under {monthName}
       </h3>
       
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+      <div className="flex-1 min-h-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
           <Pie 
             data={filteredData} 
             dataKey="value" 
             nameKey="name" 
             cx="50%" 
-            cy="50%" 
-            outerRadius={90} 
+            cy="52%" 
+            outerRadius="92%" 
             // Lägger till % direkt på siffrorna i tårtbitarna
             label={({ value }) => `${Math.round(value)}%`} 
           >
@@ -56,12 +57,13 @@ export default function StatusChart({ data, monthName }) {
           </Pie>
           {/* Lägger till % i rutan som dyker upp när man hovrar med musen */}
           <Tooltip formatter={(value) => `${Math.round(value)}%`} />
-        </PieChart>
-      </ResponsiveContainer>
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
 
       {/* Explicit legend rendered from sorted legendPayload to guarantee order
           and preserve the default horizontal, wrapped layout. */}
-      <div className="mt-3 flex flex-wrap justify-center gap-4 text-sm text-slate-700">
+      <div className="mt-1 flex flex-wrap justify-center gap-3 text-sm text-slate-700">
         {legendPayload.map((entry) => (
           <div key={entry.id} className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />

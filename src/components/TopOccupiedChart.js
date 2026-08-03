@@ -2,26 +2,40 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getChartColor, getStatusCssVar } from '@/lib/chartUtils';
 
-// Uppdaterad radbrytning: Delar texten vid mellanslag istället för parentes
+// Radbrytning för stationsnamn: upp till 4 rader för att minska överlapp.
 const CustomXAxisTick = ({ x, y, payload }) => {
-  const text = payload.value;
-  const words = text.split(' ');
-  
-  let line1 = text;
-  let line2 = '';
+  const text = String(payload.value || '');
+  const words = text.split(/\s+/).filter(Boolean);
+  const maxCharsPerLine = 12;
+  const maxLines = 4;
+  const lines = [];
+  let currentLine = '';
 
-  // Om namnet består av flera ord och är längre än 12 tecken, dela det snyggt på mitten
-  if (words.length > 1 && text.length > 12) {
-    const middleIndex = Math.ceil(words.length / 2);
-    line1 = words.slice(0, middleIndex).join(' ');
-    line2 = words.slice(middleIndex).join(' ');
+  words.forEach((word) => {
+    const candidate = currentLine ? `${currentLine} ${word}` : word;
+    if (candidate.length <= maxCharsPerLine) {
+      currentLine = candidate;
+      return;
+    }
+    if (currentLine) lines.push(currentLine);
+    currentLine = word;
+  });
+
+  if (currentLine) lines.push(currentLine);
+
+  let visibleLines = lines.slice(0, maxLines);
+  if (lines.length > maxLines) {
+    visibleLines[maxLines - 1] = `${visibleLines[maxLines - 1].slice(0, Math.max(0, maxCharsPerLine - 1))}…`;
   }
 
   return (
     <g transform={`translate(${x},${y})`}>
       <text x={0} y={0} dy={16} textAnchor="middle" fill="#666" fontSize={11}>
-        <tspan textAnchor="middle" x="0">{line1}</tspan>
-        {line2 && <tspan textAnchor="middle" x="0" dy="14">{line2}</tspan>}
+        {visibleLines.map((line, index) => (
+          <tspan key={`${line}-${index}`} textAnchor="middle" x="0" dy={index === 0 ? 0 : 14}>
+            {line}
+          </tspan>
+        ))}
       </text>
     </g>
   );
@@ -42,17 +56,19 @@ export default function TopOccupiedChart({ data, statuses, monthName }) {
   return (
     <div className="w-full h-full flex flex-col">
       <h3 className="text-xl font-semibold text-gray-800 text-center mt-2 mb-4">
-        Topp 5: Högst beläggning under {monthName}
+        Topp 10: Högst beläggning under {monthName}
       </h3>
       
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 10, left: 5, bottom: 35 }}>
+        <BarChart data={data} margin={{ top: 10, right: 10, left: 5, bottom: 16 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           
           <XAxis 
             dataKey="station" 
             interval={0} 
-            tick={<CustomXAxisTick />} 
+            tick={<CustomXAxisTick />}
+            height={78}
+            tickMargin={12}
           />
           
           <YAxis 
@@ -61,7 +77,7 @@ export default function TopOccupiedChart({ data, statuses, monthName }) {
             ticks={[0, 25, 50, 75, 100]} 
           />
           
-          <Tooltip formatter={(value) => `${value}%`} />
+          <Tooltip formatter={(value) => `${Number(value).toFixed(1)}%`} />
           
           {statuses.map((status) => (
             <Bar 
@@ -74,7 +90,7 @@ export default function TopOccupiedChart({ data, statuses, monthName }) {
           ))}
         </BarChart>
       </ResponsiveContainer>
-      <div className="mt-4 flex flex-wrap justify-center gap-4 text-sm text-slate-700">
+      <div className="mt-0.5 flex flex-wrap justify-center gap-4 text-sm text-slate-700">
         {legendPayload.map((entry) => (
           <div key={entry.id} className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />

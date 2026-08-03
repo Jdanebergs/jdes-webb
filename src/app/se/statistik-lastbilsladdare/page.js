@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import StatusChart from '@/components/StatusChart'
 import TrendChart from '@/components/TrendChart'
-import WorstStationsTable from '@/components/WorstStationsTable'
 import TopOccupiedChart from '@/components/TopOccupiedChart'
+import Worst50OutOfOrderChart from '@/components/Worst50OutOfOrderChart'
 
 export const revalidate = 60; 
 
@@ -38,14 +38,18 @@ export default async function Statistik() {
   const trendResponse = await supabase.from('monthly_charger_stats').select('year_month, status, percentage, unique_stations');
   if (trendResponse.error) console.error("Trend chart error:", trendResponse.error);
 
-  const worstResponse = await supabase.from('worst_stations_last_3_months').select('nobil_id, error_percentage, charger_station, location');
-  if (worstResponse.error) console.error("Worst stations error:", worstResponse.error);
-
-  const worstLastMonthResponse = await supabase.from('worst_stations_last_month').select('nobil_id, error_percentage, charger_station, location');
-  if (worstLastMonthResponse.error) console.error("Worst stations last month error:", worstLastMonthResponse.error);
-
-  const occupiedResponse = await supabase.from('top_occupied_stations_last_month').select('nobil_id, charger_station, location, status, percentage');
+  const occupiedResponse = await supabase
+    .from('top_occupied_stations_last_month_pivot')
+    .select('nobil_id, charger_station, location, charging_pct, available_pct, outoforder_pct, blocked_pct, reserved_pct, unknown_pct')
+    .order('charging_pct', { ascending: false });
   if (occupiedResponse.error) console.error("Occupied stations error:", occupiedResponse.error);
+
+  const worst50OutOfOrderResponse = await supabase
+    .from('worst_50_stations_last_3_months_pivot')
+    .select('rank_order, outoforder_pct, unknown_pct, available_pct, blocked_pct, charging_pct')
+    .lte('rank_order', 30)
+    .order('rank_order', { ascending: true });
+  if (worst50OutOfOrderResponse.error) console.error("Worst 50 out-of-order chart error:", worst50OutOfOrderResponse.error);
 
   // --- Hantera Pajdiagrammet ---
   const pieChartData = pieResponse.data?.map(item => ({
@@ -78,31 +82,26 @@ export default async function Statistik() {
   const statusArray = Array.from(uniqueStatuses);
 
   // --- Hantera Topp 5 Beläggning ---
-  const occupiedChartData = [];
-  const occupiedStatuses = new Set();
-  const stationIndices = {};
+  const occupiedChartData = (occupiedResponse.data || []).map((item) => ({
+    station: item.charger_station ? item.charger_station : `Station #${item.nobil_id}`,
+    "Laddar": Number(item.charging_pct) || 0,
+    "Tillgänglig": Number(item.available_pct) || 0,
+    "Ur funktion": Number(item.outoforder_pct) || 0,
+    "Blockerad": Number(item.blocked_pct) || 0,
+    "Reserverad": Number(item.reserved_pct) || 0,
+    "Okänd": Number(item.unknown_pct) || 0,
+  }));
+  const occupiedStatusArray = ["Laddar", "Tillgänglig", "Ur funktion", "Blockerad", "Reserverad", "Okänd"];
 
-  occupiedResponse.data?.forEach(item => {
-    const swedishStatus = translateStatus(item.status); // Översätts här!
-    occupiedStatuses.add(swedishStatus);
-    
-    const stationLabel = item.charger_station 
-      ? item.charger_station
-      : `Station #${item.nobil_id}`;
-
-    if (stationIndices[item.nobil_id] === undefined) {
-      occupiedChartData.push({ station: stationLabel });
-      stationIndices[item.nobil_id] = occupiedChartData.length - 1;
-    }
-
-    const index = stationIndices[item.nobil_id];
-    occupiedChartData[index][swedishStatus] = Number(item.percentage);
-  });
-  const occupiedStatusArray = Array.from(occupiedStatuses);
-
-  // --- Hantera Tabellen ---
-  const worstStationsData = worstResponse.data || [];
-  const worstStationsLastMonthData = worstLastMonthResponse.data || [];
+  // --- Hantera Topp 50 Ur Funktion ---
+  const worst50OutOfOrderData = (worst50OutOfOrderResponse.data || []).map((item) => ({
+    station: `Station #${item.rank_order}`,
+    "Ur funktion": Number(item.outoforder_pct) || 0,
+    "Okänd": Number(item.unknown_pct) || 0,
+    "Tillgänglig": Number(item.available_pct) || 0,
+    "Blockerad": Number(item.blocked_pct) || 0,
+    "Laddar": Number(item.charging_pct) || 0,
+  }));
 
   return (
     <div className="p-10 max-w-6xl mx-auto">
@@ -141,25 +140,21 @@ export default async function Statistik() {
       
       <div className="flex flex-col gap-10">
         
-        <div className="w-full h-[24rem] bg-[var(--color-surface)] border border-[var(--color-card-border)] rounded-2xl shadow-sm p-6 flex items-center justify-center">
+        <div className="w-full h-[30rem] bg-[var(--color-surface)] border border-[var(--color-card-border)] rounded-2xl shadow-sm p-6 flex items-center justify-center">
           <StatusChart data={pieChartData} monthName={formattedMonth} />
         </div>
 
       
-        <div className="w-full h-[32rem] bg-[var(--color-surface)] border border-[var(--color-card-border)] rounded-2xl shadow-sm p-6 flex items-center justify-center">
-          <TopOccupiedChart data={occupiedChartData} statuses={occupiedStatusArray} monthName={formattedMonth} />
-        </div>
-
         <div className="w-full h-[30rem] bg-[var(--color-surface)] border border-[var(--color-card-border)] rounded-2xl shadow-sm p-6 flex items-center justify-center">
           <TrendChart data={trendChartData} statuses={statusArray} />
         </div>
 
-        <div className="w-full bg-[var(--color-surface)] border border-[var(--color-card-border)] rounded-2xl shadow-sm p-6">
-          <WorstStationsTable data={worstStationsData} monthName="Senaste 3 månaderna" />
+        <div className="w-full h-[32rem] bg-[var(--color-surface)] border border-[var(--color-card-border)] rounded-2xl shadow-sm p-6 flex items-center justify-center">
+          <TopOccupiedChart data={occupiedChartData} statuses={occupiedStatusArray} monthName={formattedMonth} />
         </div>
 
-        <div className="w-full bg-[var(--color-surface)] border border-[var(--color-card-border)] rounded-2xl shadow-sm p-6">
-          <WorstStationsTable data={worstStationsLastMonthData} monthName={formattedMonth} />
+        <div className="w-full h-[54rem] bg-[var(--color-surface)] border border-[var(--color-card-border)] rounded-2xl shadow-sm p-6 flex items-center justify-center">
+          <Worst50OutOfOrderChart data={worst50OutOfOrderData} />
         </div>
 
       </div>

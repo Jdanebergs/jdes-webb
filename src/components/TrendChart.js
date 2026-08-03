@@ -62,7 +62,7 @@ export default function TrendChart({ data, statuses }) {
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="month" tick={(props) => <MonthTick {...props} data={filteredData} />} height={50} />
           <YAxis tickFormatter={(value) => `${value}%`} domain={[0, 100]} />
-          <Tooltip formatter={(value) => `${value}%`} />
+          <Tooltip formatter={(value) => `${Number(value).toFixed(1)}%`} />
           
           {activeStatuses.map((status) => (
             <Bar 
