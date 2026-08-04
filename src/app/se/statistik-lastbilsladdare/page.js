@@ -132,9 +132,12 @@ export default async function Statistik() {
         </p>
         <p className="text-gray-500 text-lg mt-6">
           Data visar beläggning i form av andel av total tid som laddaren har använts och säger inget
-          om hur snabbt fordonen har laddats under den tiden. Laddstationerna kan också användas av personbilar och 
-          det går inte heller att veta hur stor andel av total användning som de står för. Långsamladdning av lastbilar 
-          (nattetid) kan vara en förklaring för hög beläggningsgrad för vissa laddare.
+          om hur snabbt fordonen har laddats under den tiden. Informationen samlas in per laddpunkt och för att visa 
+          beläggningsgrad per laddstation summeras tiden som alla laddstationens laddpunkter har befunnits i respektive status.
+        </p>
+        <p className="text-gray-500 text-lg mt-6">
+          Laddstationerna kan också användas av personbilar och det går inte att veta hur stor andel av total användning 
+          som de står för. Långsamladdning av lastbilar (nattetid) kan vara en förklaring för hög beläggningsgrad för vissa laddare.
         </p>
       </div>
       
