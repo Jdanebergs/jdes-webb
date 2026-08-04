@@ -51,22 +51,17 @@ export default function TrendChart({ data, statuses }) {
     return updatedRow;
   });
 
-  const activeStatuses = statuses.filter((status) =>
-    filteredData.some((row) => Number(row[status]) >= threshold)
+  const preferredStackOrder = ['Laddar', 'Tillgänglig', 'Ur funktion', 'Blockerad', 'Reserverad', 'Okänd'];
+  const activeStatuses = preferredStackOrder.filter((status) =>
+    statuses.includes(status) && filteredData.some((row) => Number(row[status]) >= threshold)
   );
 
-  const legendPayload = [...activeStatuses]
-    .map((status) => ({
-      status,
-      total: filteredData.reduce((acc, row) => acc + (Number(row[status]) || 0), 0),
-    }))
-    .sort((a, b) => b.total - a.total)
-    .map((item) => ({
-      id: item.status,
-      value: item.status.charAt(0).toUpperCase() + item.status.slice(1),
-      type: 'square',
-      color: getStatusCssVar(item.status),
-    }));
+  const legendPayload = activeStatuses.map((status) => ({
+    id: status,
+    value: status.charAt(0).toUpperCase() + status.slice(1),
+    type: 'square',
+    color: getStatusCssVar(status),
+  }));
 
   return (
     <div className="w-full h-full flex flex-col">

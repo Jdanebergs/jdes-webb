@@ -17,13 +17,14 @@ export default function StatusChart({ data, monthName }) {
     .filter((entry) => entry.value >= 0.5)
     .sort((a, b) => b.value - a.value);
 
-  // Build legend payload from the same sorted, filtered data so order matches the chart
-  const legendPayload = filteredData.map((entry) => ({
-    id: entry.name,
-    value: entry.name,
-    type: 'square',
-    color: getStatusCssVar(entry.name)
-  }));
+  const preferredOrder = ['Laddar', 'Tillgänglig', 'Ur funktion', 'Blockerad', 'Reserverad', 'Okänd'];
+
+  // Build legend payload in preferred order (exclude slices filtered out above).
+  const visibleNames = new Set(filteredData.map((e) => e.name));
+  const legendPayload = preferredOrder
+    .filter((s) => visibleNames.has(s))
+    .concat([...visibleNames].filter((s) => !preferredOrder.includes(s)))
+    .map((name) => ({ id: name, value: name, type: 'square', color: getStatusCssVar(name) }));
 
   
 

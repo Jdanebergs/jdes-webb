@@ -63,12 +63,18 @@ export default function TopOccupiedChart({ data, statuses, monthName }) {
     return <div className="text-gray-500 text-center pt-20">Ingen data tillgänglig för förra månaden.</div>;
   }
 
-  // Compute total percentage per status across all stations so we can
-  // build a legend payload sorted by largest total to smallest.
-  const legendPayload = [...statuses]
-    .map((s) => ({ status: s, total: data.reduce((acc, row) => acc + (Number(row[s]) || 0), 0) }))
-    .sort((a, b) => b.total - a.total)
-    .map((x) => ({ id: x.status, value: x.status, type: 'square', color: getStatusCssVar(x.status) }));
+  const preferredStackOrder = ['Laddar', 'Tillgänglig', 'Ur funktion', 'Blockerad', 'Reserverad', 'Okänd'];
+
+  // Sort statuses by preferred order, unknown statuses go last.
+  const orderedStatuses = [...statuses].sort((a, b) => {
+    const ai = preferredStackOrder.indexOf(a);
+    const bi = preferredStackOrder.indexOf(b);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+
+  const legendPayload = orderedStatuses.map((s) => ({
+    id: s, value: s, type: 'square', color: getStatusCssVar(s),
+  }));
 
   const formatMobileStationLabel = (value) => {
     const text = String(value || '');
@@ -120,7 +126,7 @@ export default function TopOccupiedChart({ data, statuses, monthName }) {
           
           <Tooltip formatter={(value) => `${Number(value).toFixed(1)}%`} />
           
-          {statuses.map((status) => (
+          {orderedStatuses.map((status) => (
             <Bar 
               key={status} 
               dataKey={status} 
