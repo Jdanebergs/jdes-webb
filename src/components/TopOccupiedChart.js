@@ -72,7 +72,11 @@ export default function TopOccupiedChart({ data, statuses, monthName }) {
     return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
   });
 
-  const legendPayload = orderedStatuses.map((s) => ({
+  const activeStatuses = orderedStatuses.filter((status) =>
+    data.some((row) => Number(row[status]) > 0)
+  );
+
+  const legendPayload = activeStatuses.map((s) => ({
     id: s, value: s, type: 'square', color: getStatusCssVar(s),
   }));
 
@@ -126,7 +130,7 @@ export default function TopOccupiedChart({ data, statuses, monthName }) {
           
           <Tooltip formatter={(value) => `${Number(value).toFixed(1)}%`} />
           
-          {orderedStatuses.map((status) => (
+          {activeStatuses.map((status) => (
             <Bar 
               key={status} 
               dataKey={status} 
