@@ -1,16 +1,24 @@
 "use client"
+import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getChartColor, getStatusCssVar } from '@/lib/chartUtils';
 
-function MonthTick({ x, y, payload, data }) {
+function MonthTick({ x, y, payload, data, index, isMobile }) {
   const row = data.find(d => d.month === payload.value);
   const stationCount = row?.unique_stations;
   return (
     <g transform={`translate(${x},${y})`}>
-      <text x={0} y={0} dy={16} textAnchor="middle" fill="#374151" fontSize={13}>
+      <text
+        x={0}
+        y={0}
+        dy={isMobile ? (index % 2 === 0 ? 12 : 28) : 16}
+        textAnchor="middle"
+        fill="#374151"
+        fontSize={isMobile ? 11 : 13}
+      >
         {payload.value}
       </text>
-      {stationCount != null && (
+      {!isMobile && stationCount != null && (
         <text x={0} y={0} dy={32} textAnchor="middle" fill="#9ca3af" fontSize={11}>
           {stationCount} stationer
         </text>
@@ -20,6 +28,15 @@ function MonthTick({ x, y, payload, data }) {
 }
 
 export default function TrendChart({ data, statuses }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const updateViewport = () => setIsMobile(window.innerWidth < 768);
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    return () => window.removeEventListener('resize', updateViewport);
+  }, []);
+
   if (!data || data.length === 0) {
     return <div className="text-gray-500 text-center pt-20">Ingen historisk data tillgänglig.</div>;
   }
@@ -60,7 +77,12 @@ export default function TrendChart({ data, statuses }) {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={filteredData} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="month" tick={(props) => <MonthTick {...props} data={filteredData} />} height={50} />
+          <XAxis
+            dataKey="month"
+            interval={0}
+            tick={(props) => <MonthTick {...props} data={filteredData} isMobile={isMobile} />}
+            height={isMobile ? 58 : 50}
+          />
           <YAxis tickFormatter={(value) => `${value}%`} domain={[0, 100]} />
           <Tooltip formatter={(value) => `${Number(value).toFixed(1)}%`} />
           
