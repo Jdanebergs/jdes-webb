@@ -46,7 +46,7 @@ export default async function Statistik() {
 
   const worst50OutOfOrderResponse = await supabase
     .from('worst_50_stations_last_3_months_pivot')
-    .select('rank_order, outoforder_pct, unknown_pct, available_pct, blocked_pct, charging_pct')
+    .select('rank_order, evse_count, outoforder_pct, unknown_pct, available_pct, blocked_pct, charging_pct')
     .lte('rank_order', 30)
     .order('rank_order', { ascending: true });
   if (worst50OutOfOrderResponse.error) console.error("Worst 50 out-of-order chart error:", worst50OutOfOrderResponse.error);
@@ -96,6 +96,7 @@ export default async function Statistik() {
   // --- Hantera Topp 50 Ur Funktion ---
   const worst50OutOfOrderData = (worst50OutOfOrderResponse.data || []).map((item) => ({
     station: `Station #${item.rank_order}`,
+    evse_count: Number(item.evse_count) || 0,
     "Ur funktion": Number(item.outoforder_pct) || 0,
     "Okänd": Number(item.unknown_pct) || 0,
     "Tillgänglig": Number(item.available_pct) || 0,

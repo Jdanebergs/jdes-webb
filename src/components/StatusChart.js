@@ -1,9 +1,19 @@
 "use client"
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { getChartColor, getStatusCssVar } from '@/lib/chartUtils';
+import { useEffect, useState } from 'react';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { getStatusCssVar } from '@/lib/chartUtils';
 
 // Vi lägger till "monthName" som en prop (variabel) vi kan ta emot
 export default function StatusChart({ data, monthName }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const updateViewport = () => setIsMobile(window.innerWidth < 768);
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    return () => window.removeEventListener('resize', updateViewport);
+  }, []);
+
   if (!data || data.length === 0) {
     return <div className="text-gray-500 text-center pt-20">Ingen data att visa ännu.</div>;
   }
@@ -48,7 +58,7 @@ export default function StatusChart({ data, monthName }) {
             nameKey="name" 
             cx="50%" 
             cy="52%" 
-            outerRadius="92%" 
+            outerRadius={isMobile ? "74%" : "92%"} 
             // Lägger till % direkt på siffrorna i tårtbitarna
             label={({ value }) => `${Math.round(value)}%`} 
           >
