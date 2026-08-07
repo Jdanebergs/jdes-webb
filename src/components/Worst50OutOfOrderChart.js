@@ -1,4 +1,5 @@
 "use client"
+import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getStatusCssVar } from '@/lib/chartUtils';
 
@@ -17,6 +18,15 @@ const CustomStationTick = ({ x, y, payload, index, data }) => {
 };
 
 export default function Worst50OutOfOrderChart({ data }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const updateViewport = () => setIsMobile(window.innerWidth < 768);
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    return () => window.removeEventListener('resize', updateViewport);
+  }, []);
+
   if (!data || data.length === 0) {
     return <div className="text-gray-500 text-center pt-20">Ingen data tillgänglig för topp 50 ur funktion.</div>;
   }
@@ -49,13 +59,17 @@ export default function Worst50OutOfOrderChart({ data }) {
 
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={normalizedData} layout="vertical" margin={{ top: 10, right: 20, left: 30, bottom: 5 }}>
+          <BarChart
+            data={normalizedData}
+            layout="vertical"
+            margin={isMobile ? { top: 8, right: 8, left: 4, bottom: 5 } : { top: 10, right: 20, left: 30, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray="3 3" horizontal={false} />
             <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={(value) => `${value}%`} />
             <YAxis
               type="category"
               dataKey="station"
-              width={150}
+              width={isMobile ? 100 : 150}
               interval={0}
               tick={(props) => <CustomStationTick {...props} data={normalizedData} />}
             />
