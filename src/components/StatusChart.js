@@ -42,6 +42,27 @@ export default function StatusChart({ data, monthName }) {
     return <div className="text-gray-500 text-center pt-20">Ingen tillräckligt stor data att visa ännu.</div>;
   }
 
+  const renderMobileLabel = ({ cx, cy, midAngle, outerRadius, value, payload }) => {
+    const RADIAN = Math.PI / 180;
+    const radius = outerRadius + 6;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    const labelColor = getStatusCssVar(payload?.name);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill={labelColor}
+        fontSize={13}
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+      >
+        {`${Math.round(value)}%`}
+      </text>
+    );
+  };
+
   return (
     <div className="w-full h-full flex flex-col">
       {/* Vår nya dynamiska titel! */}
@@ -59,9 +80,9 @@ export default function StatusChart({ data, monthName }) {
             cx="50%" 
             cy="52%" 
             outerRadius={isMobile ? "70%" : "92%"} 
-            labelLine={isMobile ? { strokeWidth: 1, length: 3 } : true}
+            labelLine={!isMobile}
             // Lägger till % direkt på siffrorna i tårtbitarna
-            label={({ value }) => `${Math.round(value)}%`} 
+            label={isMobile ? renderMobileLabel : ({ value }) => `${Math.round(value)}%`} 
           >
             {filteredData.map((entry) => (
               <Cell key={`cell-${entry.name}`} fill={getStatusCssVar(entry.name)} />
