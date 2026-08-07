@@ -59,7 +59,7 @@ export default function StatusChart({ data, monthName }) {
             cx="50%" 
             cy="52%" 
             outerRadius={isMobile ? "70%" : "92%"} 
-            labelLine={isMobile ? { strokeWidth: 1, length: 6 } : true}
+            labelLine={isMobile ? { strokeWidth: 1, length: 3 } : true}
             // Lägger till % direkt på siffrorna i tårtbitarna
             label={({ value }) => `${Math.round(value)}%`} 
           >
